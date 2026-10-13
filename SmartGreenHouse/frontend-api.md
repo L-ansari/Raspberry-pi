@@ -316,7 +316,132 @@ Both LLM request serializers currently accept `"en"` and `"zh"`. However, the se
 
 ---
 
-## 5. Common HTTP Status Codes
+## 5. User and Authentication Endpoints
+
+User endpoints are mounted under `/api/users/`. JWT authentication is configured for Django REST Framework.
+
+### 5.1 Register a User
+
+#### `POST /api/users/register/`
+
+Request body:
+
+| Field | Type | Required | Constraints |
+|---|---|---:|---|
+| `username` | string | Yes | Must be accepted by the configured Django user model |
+| `email` | string | Yes | Must be accepted by the configured Django user model |
+| `password` | string | Yes | At least 8 characters |
+
+Example request:
+
+```json
+{
+  "username": "greenhouse_user",
+  "email": "user@example.com",
+  "password": "a-secure-password"
+}
+```
+
+On success, returns `201 Created`:
+
+```json
+{
+  "message": "User registered successfully.",
+  "user": {
+    "id": "user-id",
+    "username": "greenhouse_user",
+    "email": "user@example.com",
+    "first_name": "",
+    "last_name": "",
+    "date_joined": "2026-10-10T12:00:00Z"
+  }
+}
+```
+
+The password is write-only and is not returned. Validation failures return `400 Bad Request` with an `errors` object:
+
+```json
+{
+  "errors": {
+    "password": ["Ensure this field has at least 8 characters."]
+  }
+}
+```
+
+### 5.2 Log In and Obtain JWT Tokens
+
+#### `POST /api/users/login/`
+
+This endpoint uses Simple JWT's token-obtain-pair view.
+
+Request body:
+
+```json
+{
+  "username": "greenhouse_user",
+  "password": "a-secure-password"
+}
+```
+
+Successful response (`200 OK`):
+
+```json
+{
+  "refresh": "<refresh-token>",
+  "access": "<access-token>"
+}
+```
+
+Use the access token for authenticated requests:
+
+```http
+Authorization: Bearer <access-token>
+```
+
+### 5.3 Refresh an Access Token
+
+#### `POST /api/users/token/refresh/`
+
+Request body:
+
+```json
+{
+  "refresh": "<refresh-token>"
+}
+```
+
+Successful response (`200 OK`) includes a new access token:
+
+```json
+{
+  "access": "<new-access-token>"
+}
+```
+
+### 5.4 Get the Current User
+
+#### `GET /api/users/me/`
+
+Returns the current user's profile:
+
+```json
+{
+  "id": "user-id",
+  "username": "greenhouse_user",
+  "email": "user@example.com",
+  "first_name": "",
+  "last_name": "",
+  "date_joined": "2026-10-10T12:00:00Z"
+}
+```
+
+Send the access token in the `Authorization` header. The current view is implemented as a `GET` endpoint; profile updates are not provided by this route.
+
+**Implementation note:** The view does not explicitly declare an `IsAuthenticated` permission. Although JWT authentication is configured, unauthenticated requests are not cleanly rejected at the permission layer and may fail while building the profile response. Clients should send a valid token; the backend should be updated to enforce authentication explicitly.
+
+---
+
+## 6. Common HTTP Status Codes
 
 | Status | Meaning |
 |---|---|
@@ -327,11 +452,11 @@ Both LLM request serializers currently accept `"en"` and `"zh"`. However, the se
 | `405` | HTTP method not allowed |
 | `503` | LLM service unavailable or returned an invalid response |
 
-Most explicit API errors use a JSON body with an `error` field, except LLM request validation errors, which use an `errors` field. See the endpoint details for current implementation caveats.
+Error response shapes vary by endpoint. Sensor and LLM service errors commonly use an `error` field; request validation and registration errors use an `errors` field. See the endpoint details for current implementation caveats.
 
 ---
 
-## 6. Endpoint Reference
+## 7. Endpoint Reference
 
 ```txt
 Base URL: ${API_BASE_URL}
@@ -345,61 +470,10 @@ DELETE /api/sensors/history/del/:range/
 DELETE /api/sensors/del/:id/
 POST   /api/llm/recommend/
 POST   /api/llm/chat/
+POST   /api/users/register/
+POST   /api/users/login/
+POST   /api/users/token/refresh/
+GET    /api/users/me/
 ```
 
 This document reflects the current backend routes and behavior. Update it when the API or request/response contracts change.
-
-
-
-
-
-## 7.LLM implementation
-
-Find the SmartGreenHouse/llm/service.py， to integrate your own Ollama Model.
-
-```python
-def call_ollama(messages):
-    """
-    Send a chat request to the locally running Ollama server.
-    """
-
-    url = f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/chat"
-
-    payload = {
-        "model": settings.OLLAMA_MODEL,
-        "messages": messages,
-        "stream": False,
-    }
-
-    try:
-        response = requests.post(
-            url,
-            json=payload,
-            timeout=120,
-        )
-        response.raise_for_status()
-        result = response.json()
-
-        content = result.get("message", {}).get("content")
-
-        if not isinstance(content, str) or not content.strip():
-            raise OllamaServiceError(
-                "Ollama returned an empty response."
-            )
-
-        return content.strip()
-
-    except requests.RequestException as exc:
-        raise OllamaServiceError(
-            "Could not communicate with Ollama. "
-            "Check that Ollama is running and the model is available."
-        ) from exc
-
-    except (ValueError, TypeError) as exc:
-        raise OllamaServiceError(
-            "Ollama returned an invalid response."
-        ) from exc
-
-```
-
-And related Prompts also store in `/llm/service.py`

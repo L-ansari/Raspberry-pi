@@ -34,15 +34,16 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
+    "SmartGreenHouse.apps.MongoAdminConfig",
+    "SmartGreenHouse.apps.MongoAuthConfig",
+    "SmartGreenHouse.apps.MongoContentTypesConfig",
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'api',
     'rest_framework',
     'llm',
+   "users.apps.UsersConfig",
 ]
 
 MIDDLEWARE = [
@@ -134,3 +135,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django_mongodb_backend.fields.ObjectIdAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+}
