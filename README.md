@@ -55,7 +55,3 @@ node --test tests/api-chat.test.js   # Chat API client tests
 
 Chat is independent of plant selection. Questions are limited to 2,000 characters. The latest 30 exchanges are kept in page memory and cleared on reload. The backend receives each question separately, without previous messages. Requests currently use English because the backend's Chinese language mapping is incorrect.
 
-## Documentation
-
-- [Backend API reference](../docs/frontend-api-llm.md)
-- [Detailed Chinese frontend documentation](../docs/frontend-README.zh-CN.md) — maintained alongside this README.
