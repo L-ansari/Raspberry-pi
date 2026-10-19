@@ -50,8 +50,23 @@ export const mockData = {
       message: 'Soil moisture is 22%. Your tomato plant may need attention.',
     },
   ],
-  recommendation: null,
-  messages: [],
+  recommendations: [
+    {
+      plantId: 'tomato',
+      suggestion: 'Consider watering your plant.',
+      explanation: 'The example soil moisture readings have fallen from 46% to 22% over the past week. Check the soil before watering your tomato plant.',
+    },
+    {
+      plantId: 'basil',
+      suggestion: 'Check your basil’s soil moisture.',
+      explanation: 'The example readings show soil moisture decreasing this week. Inspect the soil and your basil before deciding whether to water.',
+    },
+    {
+      plantId: 'lettuce',
+      suggestion: 'Review your lettuce’s growing conditions.',
+      explanation: 'Use the example temperature, humidity, soil moisture and light trends to review conditions around your lettuce. Check the soil before watering.',
+    },
+  ],
 };
 
 for (const range of ['7d', '30d']) {

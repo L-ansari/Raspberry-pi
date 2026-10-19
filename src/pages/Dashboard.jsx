@@ -3,6 +3,8 @@ import PlantSelector from '../components/PlantSelector.jsx';
 import SensorCard from '../components/SensorCard.jsx';
 import HistoryChart from '../components/HistoryChart.jsx';
 import AlertPanel from '../components/AlertPanel.jsx';
+import RecommendationCard from '../components/RecommendationCard.jsx';
+import ChatBox from '../components/ChatBox.jsx';
 import { mockData } from '../data/mockData.js';
 import { getSensorHistory } from '../services/api.js';
 
@@ -20,6 +22,7 @@ export default function Dashboard() {
   const [historySource, setHistorySource] = useState('demo');
   const [historyLoading, setHistoryLoading] = useState(true);
   const plantAlerts = mockData.alerts.filter((alert) => alert.plantId === selectedPlant?.id);
+  const plantRecommendation = mockData.recommendations.find((item) => item.plantId === selectedPlant?.id);
 
   useEffect(() => {
     let active = true;
@@ -99,6 +102,10 @@ export default function Dashboard() {
       </section>
 
       <AlertPanel alerts={plantAlerts} selectedPlant={selectedPlant} />
+      <div className="assistant-grid">
+        <RecommendationCard selectedPlant={selectedPlant} recommendation={plantRecommendation} />
+        <ChatBox />
+      </div>
     </main>
   );
 }

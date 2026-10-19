@@ -17,7 +17,9 @@ async function request(path, options) {
     const fieldErrors = data?.errors && Object.entries(data.errors)
       .map(([field, messages]) => `${field}: ${[].concat(messages).join(', ')}`)
       .join('; ');
-    throw new Error(data?.error || fieldErrors || `Request failed (HTTP ${response.status})`);
+    const error = new Error(data?.error || fieldErrors || `Request failed (HTTP ${response.status})`);
+    error.status = response.status;
+    throw error;
   }
   return data;
 }
@@ -75,18 +77,25 @@ export function generateRecommendation({ hours = 24, language = 'en' } = {}) {
 }
 
 /** Ask about the greenhouse using the latest reading and up to 50 readings from the last 24 hours. */
-export function sendGreenhouseMessage(message, language = 'en') {
-  return request('/llm/chat/', {
+export async function sendGreenhouseMessage(message, language = 'en', { signal } = {}) {
+  if (typeof message !== 'string' || !message.trim() || message.trim().length > 2000) {
+    throw new Error('Enter a question between 1 and 2,000 characters.');
+  }
+  const data = await request('/llm/chat/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, language }),
+    body: JSON.stringify({ message: message.trim(), language }),
+    signal,
   });
+  if (data?.status !== 'success' || typeof data.reply !== 'string' || !data.reply.trim()) {
+    throw new Error('The assistant returned an invalid or empty answer. Please try again.');
+  }
+  return { ...data, reply: data.reply.trim() };
 }
 
 // Plant-aware response shapes to agree with the backend:
 // Alert: { id: string, plantId: string, type: string, severity: string, message: string }
 // Recommendation: { plantId: string, suggestion: string, explanation: string }
-// Chat reply: { plantId: string, answer: string }
 // Endpoints are intentionally unset because the backend has not provided them yet.
 export async function getPlantAlerts(_plantId) {
   throw new Error('Plant alerts API is not available yet');
@@ -94,8 +103,4 @@ export async function getPlantAlerts(_plantId) {
 
 export async function getPlantRecommendation(_plantId) {
   throw new Error('Plant recommendation API is not available yet');
-}
-
-export async function sendPlantQuestion(_plantId, _question) {
-  throw new Error('Plant chat API is not available yet');
 }
