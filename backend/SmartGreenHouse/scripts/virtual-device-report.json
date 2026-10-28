@@ -1,0 +1,56 @@
+{
+  "run": "20261028162410",
+  "end": "2026-10-28T16:24:10+00:00",
+  "devices": [
+    {
+      "username": "greenhouse_test_20261028_9d87d7",
+      "node_id": "virtual-20261028162410-1",
+      "readings": 720,
+      "current_id": "6ae22255253ed4db96238222",
+      "summaries": {
+        "7d": {
+          "buckets": 28,
+          "samples": 168
+        },
+        "30d": {
+          "buckets": 30,
+          "samples": 720
+        }
+      }
+    },
+    {
+      "username": "greenhouse_virtual_20261028162410_2",
+      "node_id": "virtual-20261028162410-2",
+      "readings": 720,
+      "current_id": "6ae22256253ed4db9623822f",
+      "summaries": {
+        "7d": {
+          "buckets": 28,
+          "samples": 168
+        },
+        "30d": {
+          "buckets": 30,
+          "samples": 720
+        }
+      }
+    },
+    {
+      "username": "greenhouse_virtual_20261028162410_3",
+      "node_id": "virtual-20261028162410-3",
+      "readings": 720,
+      "current_id": "6ae22256253ed4db9623822c",
+      "summaries": {
+        "7d": {
+          "buckets": 28,
+          "samples": 168
+        },
+        "30d": {
+          "buckets": 30,
+          "samples": 720
+        }
+      }
+    }
+  ],
+  "cross_account_read_checks": "6/6 denied with 404",
+  "historical_ingestion_disabled": true
+}
