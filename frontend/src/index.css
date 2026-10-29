@@ -58,7 +58,7 @@ button:focus-visible, .login-card input:focus-visible { outline: 3px solid #82bd
 .sensor-card__icon { display: grid; place-items: center; width: 62px; height: 62px; flex: none; border-radius: 50%; background: #ecf7ef; color: #115f2d; }
 .sensor-card__content { min-width: 0; }
 .sensor-card h3 { margin: 1px 0 5px; color: #334155; font-size: 15px; font-weight: 500; }
-.sensor-card__value { margin: 0 0 8px; color: #101827; font-size: clamp(25px, 2.3vw, 33px); font-weight: 700; line-height: 1.1; white-space: nowrap; }
+.sensor-card__value { margin: 0 0 8px; color: #101827; font-size: clamp(25px, 2.3vw, 33px); font-weight: 700; line-height: 1.1; overflow-wrap: anywhere; }
 .sensor-card__status { display: inline-block; padding: 5px 11px; border-radius: 8px; font-size: 14px; font-weight: 600; line-height: 1.2; }
 .sensor-card__status--normal { background: #e2f3e5; color: #14592c; }
 .sensor-card__status--low, .sensor-card__status--high { background: #fff0d5; color: #9a360e; }

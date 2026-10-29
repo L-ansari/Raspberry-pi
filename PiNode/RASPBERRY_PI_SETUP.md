@@ -38,6 +38,17 @@ cp .env.example .env
 
 Edit `.env`: set `GREENHOUSE_API_URL` to the laptop's address, for example `http://192.168.1.25:8000`, and set `GREENHOUSE_EDGE_KEY` to the key returned during registration. `.env` is ignored by Git; do not commit or share it.
 
+### Calibrate soil moisture
+
+The probe reports a raw capacitive count. To upload a percentage, record its raw count in dry soil, then record it again in well-watered soil. The script prints raw counts while uncalibrated. Put those two measured values in `.env`:
+
+```dotenv
+SOIL_MOISTURE_DRY_RAW=<dry-soil-count>
+SOIL_MOISTURE_WET_RAW=<well-watered-soil-count>
+```
+
+The script maps the dry reference to 0% and the well-watered reference to 100%, clamps readings to that range, and uploads the calculated percentage. This is a relative calibration for your probe and soil, not a universal soil-water percentage. Until both values are set, readings are printed but not uploaded.
+
 ## 4. Run and check
 
 With the backend running and both devices on the same reachable network:

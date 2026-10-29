@@ -21,6 +21,37 @@ if not API_ROOT or not EDGE_API_KEY:
 SENSOR_ENDPOINT = f"{API_ROOT}/api/sensors/"
 HEARTBEAT_ENDPOINT = f"{API_ROOT}/api/edges/heartbeat/"
 HEARTBEAT_INTERVAL = 30
+SENSOR_INTERVAL = 10
+soil_dry_raw = os.environ.get("SOIL_MOISTURE_DRY_RAW", "").strip()
+soil_wet_raw = os.environ.get("SOIL_MOISTURE_WET_RAW", "").strip()
+
+if bool(soil_dry_raw) != bool(soil_wet_raw):
+    raise RuntimeError(
+        "Set both SOIL_MOISTURE_DRY_RAW and SOIL_MOISTURE_WET_RAW, or leave both empty."
+    )
+
+try:
+    soil_dry_raw = float(soil_dry_raw) if soil_dry_raw else None
+    soil_wet_raw = float(soil_wet_raw) if soil_wet_raw else None
+except ValueError as error:
+    raise RuntimeError("Soil moisture calibration values must be numeric.") from error
+
+if soil_dry_raw is not None and soil_dry_raw == soil_wet_raw:
+    raise RuntimeError("Soil moisture dry and wet calibration values must differ.")
+
+
+def moisture_percent(raw_value):
+    if soil_dry_raw is None or soil_wet_raw is None:
+        return None
+    percentage = 100 * (raw_value - soil_dry_raw) / (soil_wet_raw - soil_dry_raw)
+    return round(max(0.0, min(100.0, percentage)), 1)
+
+
+if soil_dry_raw is None:
+    print(
+        "Soil moisture is uncalibrated. Record dry and well-watered raw counts, "
+        "then set SOIL_MOISTURE_DRY_RAW and SOIL_MOISTURE_WET_RAW in .env."
+    )
 
 #Initialize Shared I2C Bus & Devices (Soil: 0x36, Light: 0x29)
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -51,6 +82,7 @@ print("-" * 75)
 try:
     last_heartbeat = 0.0
     while True:
+        cycle_started = time.monotonic()
         # Standard formatted timestamp: YYYY-MM-DD HH:MM:SS
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -62,8 +94,12 @@ try:
             try:
                 moisture = soil_sensor.moisture_read()
                 temp_c = soil_sensor.get_temp()
-                soil_moisture_reading = float(moisture)
-                soil_moisture_val = f"{moisture}"
+                soil_moisture_reading = moisture_percent(float(moisture))
+                soil_moisture_val = (
+                    f"{soil_moisture_reading:.1f}%"
+                    if soil_moisture_reading is not None
+                    else f"{moisture} raw (uncalibrated)"
+                )
                 soil_temp_val = f"{temp_c:.1f} °C"
             except Exception as e:
                 soil_moisture_val = f"Err: {e}"
@@ -77,7 +113,7 @@ try:
             try:
                 lux = light_sensor.lux
                 if lux is not None:
-                    light_reading = float(lux)
+                    light_reading = round(float(lux), 2)
                 lux_val = f"{lux:.2f} Lux" if lux is not None else "Saturated/None"
                 vis_val = f"{light_sensor.visible}"
                 ir_val = f"{light_sensor.infrared}"
@@ -140,10 +176,12 @@ try:
             except requests.RequestException as error:
                 print(f"Sensor upload failed: {error}")
         else:
-            print("Sensor reading not uploaded: one or more values are unavailable")
+            print(
+                "Sensor reading not uploaded: a value is unavailable or soil moisture "
+                "has not been calibrated"
+            )
 
-        # Minimum required interval for DHT22 stability is 2 seconds
-        time.sleep(2.5)
+        time.sleep(max(0.0, SENSOR_INTERVAL - (time.monotonic() - cycle_started)))
 
 except KeyboardInterrupt:
     print("\nData collection halted by user.")

@@ -14,7 +14,11 @@ function SensorIcon({ type }) {
 }
 
 export default function SensorCard({ label, value, unit, status, type }) {
-  const shownValue = value == null ? '—' : `${value}${unit === '°C' ? ' ' : ''}${unit}`;
+  const formattedValue = value == null ? null : new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: type === 'light' ? 2 : 0,
+    maximumFractionDigits: type === 'light' ? 2 : 1,
+  }).format(value);
+  const shownValue = formattedValue == null ? '—' : `${formattedValue}${unit === '°C' ? ' ' : ''}${unit}`;
   const shownStatus = value == null ? 'No data' : statusLabels[status] || 'Status unavailable';
 
   return (
