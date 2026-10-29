@@ -1,0 +1,6 @@
+adafruit-blinka
+adafruit-circuitpython-seesaw
+adafruit-circuitpython-tsl2591
+adafruit-circuitpython-dht
+python-dotenv
+requests
